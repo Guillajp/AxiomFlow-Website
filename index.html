@@ -643,18 +643,19 @@
             </div>
             
             <div class="glass contact-form">
-                <form id="intakeForm">
+                <form id="intakeForm" action="https://api.web3forms.com/submit" method="POST">
+                    <input type="hidden" name="access_key" value="ae26d56b-f153-410d-82df-c5d5db843d5f">
                     <div class="form-group">
                         <label for="fullName">Full Name</label>
-                        <input type="text" id="fullName" class="form-control" required placeholder="Dr. Jane Doe">
+                        <input type="text" id="fullName" name="name" class="form-control" required placeholder="Dr. Jane Doe">
                     </div>
                     <div class="form-group">
                         <label for="emailAddress">Email Address</label>
-                        <input type="email" id="emailAddress" class="form-control" required placeholder="jane.doe@healthsystem.org">
+                        <input type="email" id="emailAddress" name="email" class="form-control" required placeholder="jane.doe@healthsystem.org">
                     </div>
                     <div class="form-group">
                         <label for="challenges">Integration Challenges</label>
-                        <textarea id="challenges" class="form-control" required placeholder="Describe your current EHR bottlenecks..."></textarea>
+                        <textarea id="challenges" name="challenges" class="form-control" required placeholder="Describe your current EHR bottlenecks..."></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary submit-btn">Request Vault Access</button>
                 </form>
@@ -672,9 +673,37 @@
         // Form Submission
         document.getElementById('intakeForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const name = document.getElementById('fullName').value;
-            alert(`Thanks, ${name}! Your request for Axiom Vault access has been received. We will contact you shortly.`);
-            this.reset();
+            const form = e.target;
+            const formData = new FormData(form);
+            const submitBtn = form.querySelector('.submit-btn');
+            const originalText = submitBtn.textContent;
+            
+            submitBtn.textContent = 'Sending...';
+            submitBtn.disabled = true;
+
+            fetch('https://api.web3forms.com/submit', {
+                method: 'POST',
+                body: formData
+            })
+            .then(async (response) => {
+                let json = await response.json();
+                if (response.status == 200) {
+                    const name = document.getElementById('fullName').value;
+                    alert(`Thanks, ${name}! Your request for Axiom Vault access has been received. We will contact you shortly.`);
+                    form.reset();
+                } else {
+                    console.log(response);
+                    alert(json.message || "Something went wrong!");
+                }
+            })
+            .catch(error => {
+                console.log(error);
+                alert("Something went wrong!");
+            })
+            .finally(() => {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            });
         });
 
         // Header scroll effect
